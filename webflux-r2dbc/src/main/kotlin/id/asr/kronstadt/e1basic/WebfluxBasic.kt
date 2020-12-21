@@ -38,8 +38,8 @@ interface SleepRepository: CoroutineCrudRepository<Sleep, Long> {
 @Component
 class ContextFilter: WebFilter {
 	override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+		MDC.put("starting-thread", Thread.currentThread().name)
 		return mono(MDCContext()) {
-			MDC.put("starting-thread", Thread.currentThread().name)
 			chain.filter(exchange).awaitSingleOrNull()
 		}
 	}
@@ -49,6 +49,7 @@ class ContextFilter: WebFilter {
 class RootController(
 		private val sleepRepository: SleepRepository
 ) {
+	/// Note: r2dbc seems to always run in a single thread.
 	// 2020-12-21 15:59:29.958  INFO 13610 --- [atcher-worker-1] id.asr.kronstadt.e1basic.RootController  : source: DefaultDispatcher-worker-1 start sleeping
 	// 2020-12-21 15:59:30.376 DEBUG 13610 --- [actor-tcp-nio-1] o.s.r2dbc.core.DefaultDatabaseClient     : Executing SQL statement [SELECT SLEEP(1) AS result]
 	// 2020-12-21 15:59:31.402  INFO 13610 --- [actor-tcp-nio-1] id.asr.kronstadt.e1basic.RootController  : source: null start counting

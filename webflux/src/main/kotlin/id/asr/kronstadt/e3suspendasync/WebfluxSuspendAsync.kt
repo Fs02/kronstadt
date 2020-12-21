@@ -38,7 +38,7 @@ data class Sleep(
 @Async
 @Repository
 interface SleepRepository: org.springframework.data.repository.Repository<Sleep, Long> {
-    @Query(value = "SELECT SLEEP(1) AS result", nativeQuery = true)
+    @Query(value = "SELECT SLEEP(0.1) AS result", nativeQuery = true)
     fun sleep(): CompletableFuture<Int>
 
     fun count(): CompletableFuture<Long>
@@ -58,6 +58,11 @@ class ContextFilter: WebFilter {
 class RootController(
         private val sleepRepository: SleepRepository
 ) {
+    //2020-12-21 16:25:36.979  INFO 17396 --- [atcher-worker-1] i.a.k.e3suspendasync.RootController      : source: DefaultDispatcher-worker-1 start sleeping
+    //2020-12-21 16:25:36.980 DEBUG 17396 --- [         task-3] org.hibernate.SQL                        : SELECT SLEEP(0.1) AS result
+    //2020-12-21 16:25:37.155  INFO 17396 --- [         task-3] i.a.k.e3suspendasync.RootController      : source: null start counting
+    //2020-12-21 16:25:37.157 DEBUG 17396 --- [         task-4] org.hibernate.SQL                        : select count(*) as col_0_0_ from sleep sleep0_
+    //2020-12-21 16:25:37.159  INFO 17396 --- [         task-4] i.a.k.e3suspendasync.RootController      : source: null done
     @GetMapping("/")
     suspend fun get(): ResponseEntity<String> {
         log.info("source: ${MDC.get("starting-thread")} start sleeping")
@@ -80,6 +85,23 @@ class RootController(
 @SpringBootApplication
 class Application
 
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    4   1.4      4       6
+//Processing:   184 2592 380.4   2660    2720
+//Waiting:      184 2592 380.7   2659    2720
+//Total:        190 2596 380.3   2663    2722
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%   2663
+//  66%   2670
+//  75%   2674
+//  80%   2676
+//  90%   2680
+//  95%   2682
+//  98%   2683
+//  99%   2688
+// 100%   2722 (longest request)
 fun main(args: Array<String>) {
 //    System.setProperty("reactor.netty.ioWorkerCount", "1");
 

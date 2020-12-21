@@ -1,7 +1,8 @@
-package id.asr.kronstadt.e5basicdispatcher
+package id.asr.kronstadt.e2dispatchio
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
@@ -13,7 +14,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
 import org.springframework.stereotype.Repository
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.reactive.config.EnableWebFlux
 import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.Id
@@ -39,17 +39,17 @@ suspend fun <T> db(
 class RootController(
         private val sleepRepository: SleepRepository
 ) {
-    //2020-12-21 17:27:42.611  INFO 19375 --- [ctor-http-nio-1] i.a.k.e5basicdispatcher.RootController   : start
-    //2020-12-21 17:27:42.617  INFO 19375 --- [atcher-worker-2] i.a.k.e5basicdispatcher.RootController   : sleep
-    //2020-12-21 17:27:42.711 DEBUG 19375 --- [atcher-worker-2] org.hibernate.SQL                        : SELECT SLEEP(0.1) AS result
-    //2020-12-21 17:27:42.904  INFO 19375 --- [atcher-worker-2] i.a.k.e5basicdispatcher.RootController   : start counting
-    //2020-12-21 17:27:42.955 DEBUG 19375 --- [atcher-worker-2] org.hibernate.SQL                        : select count(*) as col_0_0_ from sleep sleep0_
-    //2020-12-21 17:27:42.958  INFO 19375 --- [atcher-worker-2] i.a.k.e5basicdispatcher.RootController   : done
+    //2020-12-21 17:22:34.014  INFO 19097 --- [nio-8080-exec-1] i.a.k.e2dispatchio.RootController        : start
+    //2020-12-21 17:22:34.018  INFO 19097 --- [atcher-worker-1] i.a.k.e2dispatchio.RootController        : start sleeping
+    //2020-12-21 17:22:34.092 DEBUG 19097 --- [atcher-worker-1] org.hibernate.SQL                        : SELECT SLEEP(0.1) AS result
+    //2020-12-21 17:22:34.281  INFO 19097 --- [atcher-worker-1] i.a.k.e2dispatchio.RootController        : start counting
+    //2020-12-21 17:22:34.344 DEBUG 19097 --- [atcher-worker-1] org.hibernate.SQL                        : select count(*) as col_0_0_ from sleep sleep0_
+    //2020-12-21 17:22:34.347  INFO 19097 --- [nio-8080-exec-1] i.a.k.e2dispatchio.RootController        : done
     @GetMapping("/")
-    suspend fun get(): ResponseEntity<String> {
+    fun get(): ResponseEntity<String> = runBlocking {
         log.info("start")
         db {
-            log.info("sleep")
+            log.info("start sleeping")
             sleepRepository.sleep()
         }
 
@@ -59,7 +59,7 @@ class RootController(
         }
 
         log.info("done")
-        return ResponseEntity.ok("count is $count\n")
+        ResponseEntity.ok("count is $count\n")
     }
 
     companion object {
@@ -67,7 +67,6 @@ class RootController(
     }
 }
 
-@EnableWebFlux
 @EnableJpaRepositories
 @SpringBootApplication
 class Application
@@ -75,22 +74,23 @@ class Application
 //Connection Times (ms)
 //              min  mean[+/-sd] median   max
 //Connect:        0    4   1.7      4       7
-//Processing:   189 2017 168.5   2045    2070
-//Waiting:      182 2017 169.1   2045    2070
-//Total:        189 2021 168.5   2049    2072
+//Processing:   182 10768 6367.0  10832   21679
+//Waiting:      175 10768 6367.2  10832   21679
+//Total:        182 10772 6365.5  10836   21680
 //
 //Percentage of the requests served within a certain time (ms)
-//  50%   2049
-//  66%   2061
-//  75%   2063
-//  80%   2064
-//  90%   2065
-//  95%   2066
-//  98%   2066
-//  99%   2066
-// 100%   2072 (longest request)
+//  50%  10836
+//  66%  14300
+//  75%  16362
+//  80%  17399
+//  90%  19617
+//  95%  20649
+//  98%  21331
+//  99%  21503
+// 100%  21680 (longest request)
 fun main(args: Array<String>) {
-    System.setProperty("reactor.netty.ioWorkerCount", "1");
+    System.setProperty("server.tomcat.threads.min-spare", "1")
+    System.setProperty("server.tomcat.threads.max", "1")
 
     val app = SpringApplication(Application::class.java)
     app.run()

@@ -27,29 +27,26 @@ data class Sleep(
 
 @Repository
 interface SleepRepository: JpaRepository<Sleep, Long> {
-	@Query(value = "SELECT 1 AS result", nativeQuery = true)
+	@Query(value = "SELECT SLEEP(0.1) AS result", nativeQuery = true)
 	fun sleep(): Int
 }
-
-suspend fun <T> db(
-		block: suspend CoroutineScope.() -> T
-) = withContext(Dispatchers.IO, block)
 
 @Controller
 class RootController(
 		private val sleepRepository: SleepRepository
 ) {
+	//2020-12-21 16:20:05.345  INFO 16892 --- [ctor-http-nio-1] id.asr.kronstadt.e1basic.RootController  : start
+	//2020-12-21 16:20:05.415 DEBUG 16892 --- [ctor-http-nio-1] org.hibernate.SQL                        : SELECT SLEEP(0.1) AS result
+	//2020-12-21 16:20:05.602  INFO 16892 --- [ctor-http-nio-1] id.asr.kronstadt.e1basic.RootController  : start counting
+	//2020-12-21 16:20:05.673 DEBUG 16892 --- [ctor-http-nio-1] org.hibernate.SQL                        : select count(*) as col_0_0_ from sleep sleep0_
+	//2020-12-21 16:20:05.676  INFO 16892 --- [ctor-http-nio-1] id.asr.kronstadt.e1basic.RootController  : done
 	@GetMapping("/")
 	suspend fun get(): ResponseEntity<String> {
 		log.info("start")
-		db {
-			sleepRepository.sleep()
-		}
+		sleepRepository.sleep()
 
-		val count = db {
-			log.info("start counting")
-			sleepRepository.count()
-		}
+		log.info("start counting")
+		val count = sleepRepository.count()
 
 		log.info("done")
 		return ResponseEntity.ok("count is $count\n")
@@ -65,6 +62,23 @@ class RootController(
 @SpringBootApplication
 class Application
 
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    3   1.3      3       5
+//Processing:   180 10832 6343.6  10957   21759
+//Waiting:      180 10832 6343.6  10957   21759
+//Total:        185 10835 6342.3  10961   21760
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%  10961
+//  66%  14275
+//  75%  16363
+//  80%  17425
+//  90%  19661
+//  95%  20691
+//  98%  21401
+//  99%  21580
+// 100%  21760 (longest request)
 fun main(args: Array<String>) {
 	System.setProperty("reactor.netty.ioWorkerCount", "1");
 
