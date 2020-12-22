@@ -35,15 +35,15 @@ interface SleepRepository: CoroutineCrudRepository<Sleep, Long> {
 	suspend fun sleep(): Int
 }
 
-@Component
-class ContextFilter: WebFilter {
-	override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-		MDC.put("starting-thread", Thread.currentThread().name)
-		return mono(MDCContext()) {
-			chain.filter(exchange).awaitSingleOrNull()
-		}
-	}
-}
+//@Component
+//class ContextFilter: WebFilter {
+//	override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+//		MDC.put("starting-thread", Thread.currentThread().name)
+//		return mono(MDCContext()) {
+//			chain.filter(exchange).awaitSingleOrNull()
+//		}
+//	}
+//}
 
 @Controller
 class RootController(
@@ -57,11 +57,11 @@ class RootController(
 	// 2020-12-21 15:59:31.458  INFO 13610 --- [actor-tcp-nio-1] id.asr.kronstadt.e1basic.RootController  : source: null done
 	@GetMapping("/")
 	suspend fun get(): ResponseEntity<String> {
-		log.info("source: ${MDC.get("starting-thread")} start sleeping")
+//		log.info("source: ${MDC.get("starting-thread")} start sleeping")
 		sleepRepository.sleep()
-		log.info("source: ${MDC.get("starting-thread")} start counting")
+//		log.info("source: ${MDC.get("starting-thread")} start counting")
 		val count = sleepRepository.count()
-		log.info("source: ${MDC.get("starting-thread")} done")
+//		log.info("source: ${MDC.get("starting-thread")} done")
 		return ResponseEntity.ok("count is $count\n")
 	}
 
@@ -75,25 +75,67 @@ class RootController(
 @SpringBootApplication
 class Application
 
+// Single request worker: ab -n 128 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   2.450 seconds
+//Complete requests:      128
+//Failed requests:        0
+//Total transferred:      11520 bytes
+//HTML transferred:       1408 bytes
+//Requests per second:    52.24 [#/sec] (mean)
+//Time per request:       2450.008 [ms] (mean)
+//Time per request:       19.141 [ms] (mean, across all concurrent requests)
+//Transfer rate:          4.59 [Kbytes/sec] received
+//
 //Connection Times (ms)
 //              min  mean[+/-sd] median   max
-//Connect:        0    3   1.4      3       6
-//Processing:   744 2021 118.1   2032    2126
-//Waiting:      737 2021 118.6   2032    2126
-//Total:        744 2024 118.0   2036    2127
+//Connect:        0    4   1.9      4       8
+//Processing:   181 2113 175.5   2123    2267
+//Waiting:      174 2113 176.2   2123    2267
+//Total:        182 2117 175.6   2127    2269
 //
 //Percentage of the requests served within a certain time (ms)
-//  50%   2036
-//  66%   2051
-//  75%   2060
-//  80%   2064
-//  90%   2071
-//  95%   2074
-//  98%   2089
-//  99%   2089
-// 100%   2127 (longest request)
+//  50%   2127
+//  66%   2135
+//  75%   2140
+//  80%   2142
+//  90%   2148
+//  95%   2175
+//  98%   2267
+//  99%   2268
+// 100%   2269 (longest request)
+
+// Unlimited request worker: ab -n 10000 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   171.476 seconds
+//Complete requests:      10000
+//Failed requests:        0
+//Total transferred:      900000 bytes
+//HTML transferred:       110000 bytes
+//Requests per second:    58.32 [#/sec] (mean)
+//Time per request:       2194.894 [ms] (mean)
+//Time per request:       17.148 [ms] (mean, across all concurrent requests)
+//Transfer rate:          5.13 [Kbytes/sec] received
+//
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    0   0.4      0       5
+//Processing:   600 2183 310.2   2098    4157
+//Waiting:      595 2183 310.2   2098    4157
+//Total:        601 2183 310.2   2098    4157
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%   2098
+//  66%   2123
+//  75%   2166
+//  80%   2229
+//  90%   2450
+//  95%   2798
+//  98%   3376
+//  99%   3784
+// 100%   4157 (longest request)
 fun main(args: Array<String>) {
-	System.setProperty("reactor.netty.ioWorkerCount", "1");
+//	System.setProperty("reactor.netty.ioWorkerCount", "1");
 
 	val app = SpringApplication(Application::class.java)
 	app.run()

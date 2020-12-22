@@ -50,15 +50,13 @@ class RootController(
     @GetMapping("/")
     suspend fun get(): ResponseEntity<String> {
         return withContext(Dispatchers.Default) {
-            log.info("context: ${MDC.get("kotlin")}")
-            println(coroutineContext)
-
-            log.info("start sleeping")
+//            log.info("start")
             sleepRepository.sleep().await()
-            log.info("start counting")
-            val count = sleepRepository.count().await()
-            log.info("done")
 
+//            log.info("start counting")
+            val count = sleepRepository.count().await()
+
+//            log.info("done")
             ResponseEntity.ok("count is $count\n")
         }
     }
@@ -74,25 +72,67 @@ class RootController(
 @SpringBootApplication
 class Application
 
+// Single request worker: ab -n 128 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   3.244 seconds
+//Complete requests:      128
+//Failed requests:        0
+//Total transferred:      11520 bytes
+//HTML transferred:       1408 bytes
+//Requests per second:    39.46 [#/sec] (mean)
+//Time per request:       3244.033 [ms] (mean)
+//Time per request:       25.344 [ms] (mean, across all concurrent requests)
+//Transfer rate:          3.47 [Kbytes/sec] received
+//
 //Connection Times (ms)
 //              min  mean[+/-sd] median   max
-//Connect:        0    4   1.5      4       6
-//Processing:   193 2521 209.4   2551    2574
-//Waiting:      187 2521 210.0   2550    2573
-//Total:        193 2525 209.5   2554    2575
+//Connect:        0    3   1.2      3       5
+//Processing:   494 2665 202.8   2699    2749
+//Waiting:      488 2665 203.2   2698    2749
+//Total:        494 2668 202.8   2702    2750
 //
 //Percentage of the requests served within a certain time (ms)
-//  50%   2554
-//  66%   2561
-//  75%   2564
-//  80%   2565
-//  90%   2567
-//  95%   2573
-//  98%   2574
-//  99%   2574
-// 100%   2575 (longest request)
+//  50%   2702
+//  66%   2729
+//  75%   2737
+//  80%   2743
+//  90%   2747
+//  95%   2748
+//  98%   2749
+//  99%   2750
+// 100%   2750 (longest request)
+
+// Unlimited request worker: ab -n 10000 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   206.874 seconds
+//Complete requests:      10000
+//Failed requests:        0
+//Total transferred:      900000 bytes
+//HTML transferred:       110000 bytes
+//Requests per second:    48.34 [#/sec] (mean)
+//Time per request:       2647.985 [ms] (mean)
+//Time per request:       20.687 [ms] (mean, across all concurrent requests)
+//Transfer rate:          4.25 [Kbytes/sec] received
+//
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    0   0.4      0       5
+//Processing:   432 2637 288.7   2587    5055
+//Waiting:      427 2637 288.7   2587    5055
+//Total:        433 2637 288.7   2587    5057
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%   2587
+//  66%   2617
+//  75%   2641
+//  80%   2683
+//  90%   2941
+//  95%   3273
+//  98%   3509
+//  99%   3784
+// 100%   5057 (longest request)
 fun main(args: Array<String>) {
-    System.setProperty("reactor.netty.ioWorkerCount", "1");
+//    System.setProperty("reactor.netty.ioWorkerCount", "1");
 
     val app = SpringApplication(Application::class.java)
     app.run()

@@ -47,18 +47,18 @@ class RootController(
     //2020-12-21 17:22:34.347  INFO 19097 --- [nio-8080-exec-1] i.a.k.e2dispatchio.RootController        : done
     @GetMapping("/")
     fun get(): ResponseEntity<String> = runBlocking {
-        log.info("start")
+//        log.info("start")
         db {
-            log.info("start sleeping")
+//            log.info("start sleeping")
             sleepRepository.sleep()
         }
 
         val count = db {
-            log.info("start counting")
+//            log.info("start counting")
             sleepRepository.count()
         }
 
-        log.info("done")
+//        log.info("done")
         ResponseEntity.ok("count is $count\n")
     }
 
@@ -71,26 +71,68 @@ class RootController(
 @SpringBootApplication
 class Application
 
+// Single request worker: ab -n 128 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   21.657 seconds
+//Complete requests:      128
+//Failed requests:        0
+//Total transferred:      18432 bytes
+//HTML transferred:       1408 bytes
+//Requests per second:    5.91 [#/sec] (mean)
+//Time per request:       21656.843 [ms] (mean)
+//Time per request:       169.194 [ms] (mean, across all concurrent requests)
+//Transfer rate:          0.83 [Kbytes/sec] received
+//
 //Connection Times (ms)
 //              min  mean[+/-sd] median   max
-//Connect:        0    4   1.7      4       7
-//Processing:   182 10768 6367.0  10832   21679
-//Waiting:      175 10768 6367.2  10832   21679
-//Total:        182 10772 6365.5  10836   21680
+//Connect:        0    3   1.3      3       6
+//Processing:   109 10632 6217.2  10818   21231
+//Waiting:      108 10632 6217.3  10818   21231
+//Total:        114 10636 6216.1  10822   21232
 //
 //Percentage of the requests served within a certain time (ms)
-//  50%  10836
-//  66%  14300
-//  75%  16362
-//  80%  17399
-//  90%  19617
-//  95%  20649
-//  98%  21331
-//  99%  21503
-// 100%  21680 (longest request)
+//  50%  10822
+//  66%  14006
+//  75%  16107
+//  80%  17161
+//  90%  19233
+//  95%  20190
+//  98%  20882
+//  99%  21054
+// 100%  21232 (longest request)
+
+// Unlimited request worker: ab -n 10000 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   161.398 seconds
+//Complete requests:      10000
+//Failed requests:        0
+//Total transferred:      1440000 bytes
+//HTML transferred:       110000 bytes
+//Requests per second:    61.96 [#/sec] (mean)
+//Time per request:       2065.894 [ms] (mean)
+//Time per request:       16.140 [ms] (mean, across all concurrent requests)
+//Transfer rate:          8.71 [Kbytes/sec] received
+//
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    0   0.5      0      11
+//Processing:   399 2055 219.4   2033    3795
+//Waiting:      394 2055 219.4   2033    3795
+//Total:        399 2055 219.4   2034    3797
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%   2034
+//  66%   2096
+//  75%   2144
+//  80%   2176
+//  90%   2276
+//  95%   2421
+//  98%   2605
+//  99%   2893
+// 100%   3797 (longest request)
 fun main(args: Array<String>) {
-    System.setProperty("server.tomcat.threads.min-spare", "1")
-    System.setProperty("server.tomcat.threads.max", "1")
+//    System.setProperty("server.tomcat.threads.min-spare", "1")
+//    System.setProperty("server.tomcat.threads.max", "1")
 
     val app = SpringApplication(Application::class.java)
     app.run()

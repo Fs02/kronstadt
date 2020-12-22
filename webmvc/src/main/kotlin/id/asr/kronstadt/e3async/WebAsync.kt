@@ -45,11 +45,11 @@ class RootController(
     //2020-12-21 16:12:55.434  INFO 16197 --- [nio-8080-exec-1] id.asr.kronstadt.e3async.RootController  : done
     @GetMapping("/")
     fun get(): ResponseEntity<String> = runBlocking {
-        log.info("start sleeping")
+//        log.info("start sleeping")
         sleepRepository.sleep().await()
-        log.info("start counting")
+//        log.info("start counting")
         val count =  sleepRepository.count().await()
-        log.info("done")
+//        log.info("done")
         ResponseEntity.ok("count is $count\n")
     }
 
@@ -63,26 +63,68 @@ class RootController(
 @SpringBootApplication
 class Application
 
+// Single request worker: ab -n 128 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   22.094 seconds
+//Complete requests:      128
+//Failed requests:        0
+//Total transferred:      18432 bytes
+//HTML transferred:       1408 bytes
+//Requests per second:    5.79 [#/sec] (mean)
+//Time per request:       22093.748 [ms] (mean)
+//Time per request:       172.607 [ms] (mean, across all concurrent requests)
+//Transfer rate:          0.81 [Kbytes/sec] received
+//
 //Connection Times (ms)
 //              min  mean[+/-sd] median   max
-//Connect:        0    4   1.6      4       6
-//Processing:   176 10731 6328.6  10833   21589
-//Waiting:      170 10730 6328.7  10833   21589
-//Total:        176 10735 6327.2  10837   21590
+//Connect:        0    3   1.3      3       6
+//Processing:   178 10820 6390.4  10843   21687
+//Waiting:      178 10820 6390.5  10843   21686
+//Total:        183 10824 6389.3  10846   21688
 //
 //Percentage of the requests served within a certain time (ms)
-//  50%  10837
-//  66%  14251
-//  75%  16267
-//  80%  17277
-//  90%  19541
-//  95%  20589
-//  98%  21235
-//  99%  21412
-// 100%  21590 (longest request)
+//  50%  10846
+//  66%  14378
+//  75%  16504
+//  80%  17565
+//  90%  19682
+//  95%  20698
+//  98%  21325
+//  99%  21504
+// 100%  21688 (longest request)
+
+// Unlimited request worker: ab -n 10000 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   206.669 seconds
+//Complete requests:      10000
+//Failed requests:        0
+//Total transferred:      1440000 bytes
+//HTML transferred:       110000 bytes
+//Requests per second:    48.39 [#/sec] (mean)
+//Time per request:       2645.362 [ms] (mean)
+//Time per request:       20.667 [ms] (mean, across all concurrent requests)
+//Transfer rate:          6.80 [Kbytes/sec] received
+//
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    0   0.4      0       5
+//Processing:   353 2636 368.4   2550    5052
+//Waiting:      347 2636 368.4   2550    5052
+//Total:        353 2636 368.4   2550    5052
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%   2550
+//  66%   2587
+//  75%   2603
+//  80%   2615
+//  90%   2878
+//  95%   3283
+//  98%   4133
+//  99%   4412
+// 100%   5052 (longest request)
 fun main(args: Array<String>) {
-    System.setProperty("server.tomcat.threads.min-spare", "1")
-    System.setProperty("server.tomcat.threads.max", "1")
+//    System.setProperty("server.tomcat.threads.min-spare", "1")
+//    System.setProperty("server.tomcat.threads.max", "1")
 
     val app = SpringApplication(Application::class.java)
     app.run()

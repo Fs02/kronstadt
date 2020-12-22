@@ -43,16 +43,16 @@ interface SleepRepository: org.springframework.data.repository.Repository<Sleep,
 
     fun count(): CompletableFuture<Long>
 }
-
-@Component
-class ContextFilter: WebFilter {
-    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-        return mono(MDCContext()) {
-            MDC.put("starting-thread", Thread.currentThread().name)
-            chain.filter(exchange).awaitSingleOrNull()
-        }
-    }
-}
+//
+//@Component
+//class ContextFilter: WebFilter {
+//    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+//        return mono(MDCContext()) {
+//            MDC.put("starting-thread", Thread.currentThread().name)
+//            chain.filter(exchange).awaitSingleOrNull()
+//        }
+//    }
+//}
 
 @Controller
 class RootController(
@@ -65,12 +65,13 @@ class RootController(
     //2020-12-21 16:25:37.159  INFO 17396 --- [         task-4] i.a.k.e3suspendasync.RootController      : source: null done
     @GetMapping("/")
     suspend fun get(): ResponseEntity<String> {
-        log.info("source: ${MDC.get("starting-thread")} start sleeping")
+//        log.info("start")
         sleepRepository.sleep().await()
-        log.info("source: ${MDC.get("starting-thread")} start counting")
-        val count = sleepRepository.count().await()
-        log.info("source: ${MDC.get("starting-thread")} done")
 
+//        log.info("start counting")
+        val count = sleepRepository.count().await()
+
+//        log.info("done")
         return ResponseEntity.ok("count is $count\n")
     }
 
@@ -85,23 +86,65 @@ class RootController(
 @SpringBootApplication
 class Application
 
+// Single request worker: ab -n 128 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   3.224 seconds
+//Complete requests:      128
+//Failed requests:        0
+//Total transferred:      11520 bytes
+//HTML transferred:       1408 bytes
+//Requests per second:    39.70 [#/sec] (mean)
+//Time per request:       3223.826 [ms] (mean)
+//Time per request:       25.186 [ms] (mean, across all concurrent requests)
+//Transfer rate:          3.49 [Kbytes/sec] received
+//
 //Connection Times (ms)
 //              min  mean[+/-sd] median   max
-//Connect:        0    4   1.4      4       6
-//Processing:   184 2592 380.4   2660    2720
-//Waiting:      184 2592 380.7   2659    2720
-//Total:        190 2596 380.3   2663    2722
+//Connect:        0    6   2.1      6       9
+//Processing:   470 2647 207.6   2683    2752
+//Waiting:      462 2647 208.3   2683    2751
+//Total:        471 2653 207.5   2689    2753
 //
 //Percentage of the requests served within a certain time (ms)
-//  50%   2663
-//  66%   2670
-//  75%   2674
-//  80%   2676
-//  90%   2680
-//  95%   2682
-//  98%   2683
-//  99%   2688
-// 100%   2722 (longest request)
+//  50%   2689
+//  66%   2707
+//  75%   2716
+//  80%   2719
+//  90%   2727
+//  95%   2730
+//  98%   2742
+//  99%   2743
+// 100%   2753 (longest request)
+
+// Unlimited request worker: ab -n 10000 -c 128 "http://localhost:8080/"
+//Concurrency Level:      128
+//Time taken for tests:   210.569 seconds
+//Complete requests:      10000
+//Failed requests:        0
+//Total transferred:      900000 bytes
+//HTML transferred:       110000 bytes
+//Requests per second:    47.49 [#/sec] (mean)
+//Time per request:       2695.290 [ms] (mean)
+//Time per request:       21.057 [ms] (mean, across all concurrent requests)
+//Transfer rate:          4.17 [Kbytes/sec] received
+//
+//Connection Times (ms)
+//              min  mean[+/-sd] median   max
+//Connect:        0    0   0.5      0       6
+//Processing:   375 2683 305.3   2646    5334
+//Waiting:      370 2683 305.3   2646    5334
+//Total:        376 2683 305.3   2646    5335
+//
+//Percentage of the requests served within a certain time (ms)
+//  50%   2646
+//  66%   2697
+//  75%   2731
+//  80%   2766
+//  90%   2941
+//  95%   3198
+//  98%   3465
+//  99%   3809
+// 100%   5335 (longest request)
 fun main(args: Array<String>) {
 //    System.setProperty("reactor.netty.ioWorkerCount", "1");
 
