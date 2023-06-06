@@ -9,7 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Extract dependencies
-        shell: bash
         run: |
           echo "::notice start"
           mkdir -p build/dependencies
