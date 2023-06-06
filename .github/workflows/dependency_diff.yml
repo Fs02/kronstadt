@@ -19,7 +19,6 @@ jobs:
                   project=${line:14:-1}
                   echo "::notice Exporting $project dependencies"; 
                   ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
-                  echo "::notice ${cat build/dependencies/$project.txt}"
+                  echo "::notice $(cat build/dependencies/$project.txt)"
               fi
           done
-
