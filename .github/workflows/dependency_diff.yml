@@ -10,15 +10,14 @@ jobs:
       - uses: actions/checkout@v3
       - name: Extract dependencies
         run: |
-          echo "::notice start"
+          echo "::notice dumping dependencies"
+          echo "$IFS" | cat -et
           mkdir -p build/dependencies
           projects=$(./gradlew -q projects)
           echo "::notice $projects"
           for line in $(echo ${projects}); do
-              echo "line: $line"
-              if [[ $line =~ "--- Project" ]]; then
-                  project=${line:14:-1}
-                  echo "::notice Exporting $project dependencies"; 
+              if [[ $line =~ "':" ]]; then
+                  echo "::notice dumping $project dependencies"; 
                   ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
                   echo "::notice $(cat build/dependencies/$project.txt)"
               fi
