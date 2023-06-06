@@ -1,0 +1,25 @@
+name: Dependency Diff
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  extract-updated-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Extract dependencies
+        shell: bash
+        run: |
+          echo "::notice start"
+          mkdir -p build/dependencies
+          projects=$(./gradlew -q projects)
+          echo "::notice $projects"
+          echo $projects | while read line ; do
+              if [[ $line =~ "--- Project" ]]; then
+                  project=${${line#*Project \'}%\'*}
+                  echo "::notice Exporting $project dependencies"; 
+                  ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
+                  echo "::notice ${cat build/dependencies/$project.txt}"
+              fi
+          done
