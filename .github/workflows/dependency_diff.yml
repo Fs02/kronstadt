@@ -17,7 +17,7 @@ jobs:
           echo "::notice $projects"
           echo $projects | while read line ; do
               if [[ $line =~ "--- Project" ]]; then
-                  project=${${line#*Project \'}%\'*}
+                  project=${line:14:-1}
                   echo "::notice Exporting $project dependencies"; 
                   ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
                   echo "::notice ${cat build/dependencies/$project.txt}"
