@@ -14,7 +14,7 @@ jobs:
           mkdir -p build/dependencies
           projects=$(./gradlew -q projects)
           echo "::notice $projects"
-          echo $projects | while read -r line ; do
+          for line in $(echo ${projects}); do
               if [[ $line =~ "--- Project" ]]; then
                   project=${line:14:-1}
                   echo "::notice Exporting $project dependencies"; 
@@ -22,3 +22,4 @@ jobs:
                   echo "::notice ${cat build/dependencies/$project.txt}"
               fi
           done
+
