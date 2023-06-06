@@ -11,13 +11,15 @@ jobs:
       - name: Extract dependencies
         shell: bash
         run: |
+          echo "::notice start"
           mkdir -p build/dependencies
           projects=(./gradlew -q projects)
+          echo "::notice $projects"
           echo $projects | while read line ; do
               if [[ $line =~ "--- Project" ]]; then
                   project=${${line#*Project \'}%\'*}
-                  echo "Exporting $project dependencies"; 
+                  echo "::notice Exporting $project dependencies"; 
                   ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
-                  cat build/dependencies/$project.txt
+                  echo "::notice ${cat build/dependencies/$project.txt}"
               fi
           done
