@@ -15,6 +15,7 @@ jobs:
           projects=$(./gradlew -q projects)
           echo "::notice $projects"
           for line in $(echo ${projects}); do
+              echo "line: $line"
               if [[ $line =~ "--- Project" ]]; then
                   project=${line:14:-1}
                   echo "::notice Exporting $project dependencies"; 
