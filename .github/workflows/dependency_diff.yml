@@ -13,7 +13,7 @@ jobs:
         run: |
           echo "::notice start"
           mkdir -p build/dependencies
-          projects=(./gradlew -q projects)
+          projects=$(./gradlew -q projects)
           echo "::notice $projects"
           echo $projects | while read line ; do
               if [[ $line =~ "--- Project" ]]; then
