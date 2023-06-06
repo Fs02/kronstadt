@@ -17,6 +17,7 @@ jobs:
           echo "::notice $projects"
           for line in $(echo ${projects}); do
               if [[ $line =~ "':" ]]; then
+                  project=${line:1:-1}
                   echo "::notice dumping $project dependencies"; 
                   ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
                   echo "::notice $(cat build/dependencies/$project.txt)"
