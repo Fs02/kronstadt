@@ -9,6 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Extract dependencies
+        shell: bash
         run: |
           mkdir -p build/dependencies
           projects=(./gradlew -q projects)
