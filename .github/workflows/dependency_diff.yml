@@ -57,8 +57,8 @@ jobs:
               if [[ $line =~ "':" ]]; then
                   project=${line:1:-1}
                   echo "::notice diffing $project dependencies"; 
-                  echo '### $project' >> $GITHUB_ENV
-                  echo '```' >> $GITHUB_ENV
+                  echo "### $project" >> $GITHUB_ENV
+                  echo '```diff' >> $GITHUB_ENV
                   ./dependency-tree-diff.jar main/build/dependencies/$project.txt build/dependencies/$project.txt  >> $GITHUB_ENV
                   echo '```' >> $GITHUB_ENV
               fi
