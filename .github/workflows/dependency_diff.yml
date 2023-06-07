@@ -2,6 +2,11 @@ name: Dependency Diff
 
 on:
   workflow_dispatch: {}
+  pull_request:
+    paths:
+      - 'gradle/**'
+      - 'buildSrc/**'
+      - '**.gradle.kts'
 
 jobs:
   diff-dependencies:
@@ -50,12 +55,22 @@ jobs:
           chmod +x dependency-tree-diff.jar
           mkdir -p build/dependencies-diff
           projects=$(./gradlew -q projects)
+
+          echo 'DEPENDENCY_DIFF<<EOF' >> $GITHUB_ENV
           for line in $(echo ${projects}); do
               if [[ $line =~ "':" ]]; then
                   project=${line:1:-1}
                   echo "::notice diffing $project dependencies"; 
-                  ./dependency-tree-diff.jar build/dependencies/$project.txt main/build/dependencies/$project.txt > build/dependencies-diff/$project.txt
-                  echo "::notice $(cat build/dependencies-diff/$project.txt)"
+                  echo "### $project" >> $GITHUB_ENV
+                  echo '```diff' >> $GITHUB_ENV
+                  ./dependency-tree-diff.jar main/build/dependencies/$project.txt build/dependencies/$project.txt  >> $GITHUB_ENV
+                  echo '```' >> $GITHUB_ENV
               fi
           done
-
+          echo 'EOF' >> $GITHUB_ENV
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ## Dependencies diff
+            ${{ env.DEPENDENCY_DIFF }}
