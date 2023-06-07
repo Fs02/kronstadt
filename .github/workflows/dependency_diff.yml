@@ -54,7 +54,7 @@ jobs:
               if [[ $line =~ "':" ]]; then
                   project=${line:1:-1}
                   echo "::notice diffing $project dependencies"; 
-                  ./dependency-tree-diff.jar build/dependencies/$project.txt main/build/dependencies/$project.txt > build/dependencies-diff/$project.txt
+                  ./dependency-tree-diff.jar main/build/dependencies/$project.txt build/dependencies/$project.txt > build/dependencies-diff/$project.txt
                   echo "::notice $(cat build/dependencies-diff/$project.txt)"
               fi
           done
