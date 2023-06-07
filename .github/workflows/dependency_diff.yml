@@ -60,9 +60,9 @@ jobs:
                   ./dependency-tree-diff.jar main/build/dependencies/$project.txt build/dependencies/$project.txt > build/dependencies-diff/$project.txt
                   echo "::notice $(cat build/dependencies-diff/$project.txt)"
                   
-                  echo "## $project" >> $GITHUB_ENV
+                  echo "### $project" >> $GITHUB_ENV
                   echo "\n```" >> $GITHUB_ENV
-                  cat build/dependencies-diff/$project.txt >> $GITHUB_ENV
+                  echo $(cat build/dependencies-diff/$project.txt) >> $GITHUB_ENV
                   echo "```\n" >> $GITHUB_ENV
               fi
           done
@@ -71,5 +71,5 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            # Dependencies updates
+            ## Dependencies updates
             ${{ env.DEPENDENCY_DIFF }}
