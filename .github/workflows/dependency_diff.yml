@@ -4,14 +4,13 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  extract-updated-dependencies:
+  diff-dependencies:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Extract dependencies
+      - name: Extract updated dependencies
         run: |
-          echo "::notice dumping dependencies"
-          echo "$IFS" | cat -et
+          echo "::notice ${pwd}"
           mkdir -p build/dependencies
           projects=$(./gradlew -q projects)
           echo "::notice $projects"
@@ -23,3 +22,40 @@ jobs:
                   echo "::notice $(cat build/dependencies/$project.txt)"
               fi
           done
+          echo "::notice $(ls build/dependencies)"          
+      - uses: actions/checkout@v3
+        with:
+          ref: other
+          path: main
+      - name: Extract main dependencies
+        run: |
+          cd main
+          echo "::notice ${pwd}"
+          mkdir -p build/dependencies
+          projects=$(./gradlew -q projects)
+          echo "::notice $projects"
+          for line in $(echo ${projects}); do
+              if [[ $line =~ "':" ]]; then
+                  project=${line:1:-1}
+                  echo "::notice dumping $project dependencies"; 
+                  ./gradlew $project:dependencies </dev/null > build/dependencies/$project.txt
+                  echo "::notice $(cat build/dependencies/$project.txt)"
+              fi
+          done  
+          echo "::notice $(ls build/dependencies)"
+      - name: Diff dependencies
+        run: |
+          echo "::notice ${pwd}"
+          curl -L https://github.com/TWiStErRob/dependency-tree-diff/releases/download/1.3.0/dependency-tree-diff.jar > dependency-tree-diff.jar
+          chmod +x dependency-tree-diff.jar
+          mkdir -p build/dependencies-diff
+          projects=$(./gradlew -q projects)
+          for line in $(echo ${projects}); do
+              if [[ $line =~ "':" ]]; then
+                  project=${line:1:-1}
+                  echo "::notice diffing $project dependencies"; 
+                  ./dependency-tree-diff.jar build/dependencies/$project.txt main/build/dependencies/$project.txt > build/dependencies-diff/$project.txt
+                  echo "::notice $(cat build/dependencies-diff/$project.txt)"
+              fi
+          done
+
