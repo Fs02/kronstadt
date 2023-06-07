@@ -57,13 +57,10 @@ jobs:
               if [[ $line =~ "':" ]]; then
                   project=${line:1:-1}
                   echo "::notice diffing $project dependencies"; 
-                  ./dependency-tree-diff.jar main/build/dependencies/$project.txt build/dependencies/$project.txt > build/dependencies-diff/$project.txt
-                  echo "::notice $(cat build/dependencies-diff/$project.txt)"
-                  
                   echo "### $project" >> $GITHUB_ENV
-                  echo "\n```" >> $GITHUB_ENV
-                  echo $(cat build/dependencies-diff/$project.txt) >> $GITHUB_ENV
-                  echo "```\n" >> $GITHUB_ENV
+                  echo "```" >> $GITHUB_ENV
+                  ./dependency-tree-diff.jar main/build/dependencies/$project.txt build/dependencies/$project.txt  >> $GITHUB_ENV
+                  echo "```" >> $GITHUB_ENV
               fi
           done
           echo 'EOF' >> $GITHUB_ENV
@@ -71,5 +68,5 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            ## Dependencies updates
+            ## Dependencies diff
             ${{ env.DEPENDENCY_DIFF }}
